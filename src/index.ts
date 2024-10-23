@@ -23,17 +23,18 @@ const config = {
 };
 const clientConfig: ClientConfig = config;
 const middlewareConfig: MiddlewareConfig = config;
-const client = new Client(clientConfig); //①
+const client = new Client(clientConfig);
 
-const app: Application = express(); //②
+const app: Application = express();
 
-app.get('/', async (_: Request, res: Response): Promise<void> => { //③
+app.get('/', async (_: Request, res: Response): Promise<void> => {
   res.status(200).send({
     message: 'success',
   });
 });
 
-const textEventHandler = async ( //④
+// メッセージ受信時の処理
+const textEventHandler = async (
   event: WebhookEvent
 ): Promise<MessageAPIResponseBase | undefined> => {
   if (event.type !== 'message' || event.message.type !== 'text') {
@@ -45,12 +46,12 @@ const textEventHandler = async ( //④
   const { text } = event.message;
   const response: TextMessage = {
     type: 'text',
-    text: text,
+    text: "お名前の登録が完了しました！！\n" + text + "様\n上記のお名前でお呼びします。",
   };
   await client.replyMessage(replyToken, response);
 };
 
-app.post( //⑤
+app.post(
   '/webhook',
   middleware(middlewareConfig),
   async (req: Request, res: Response): Promise<void> => {
@@ -71,6 +72,6 @@ app.post( //⑤
   }
 );
 
-app.listen(PORT, () => { //⑥
+app.listen(PORT, () => {
   console.log(`http://localhost:${PORT}/`);
 });
