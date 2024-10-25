@@ -1,3 +1,6 @@
+import express, { Application, Request, Response } from 'express';
+import { load } from 'ts-dotenv';
+import { getUsers, createUser } from './userService';
 import {
   ClientConfig,
   Client,
@@ -7,31 +10,23 @@ import {
   TextMessage,
   MessageAPIResponseBase,
 } from '@line/bot-sdk';
-import express, { Application, Request, Response } from 'express';
-import { load } from 'ts-dotenv';
+
 const env = load({
   CHANNEL_ACCESS_TOKEN: String,
   CHANNEL_SECRET: String,
   PORT: Number,
 });
-
-const PORT = env.PORT || 3000;
-
 const config = {
   channelAccessToken: env.CHANNEL_ACCESS_TOKEN || '',
   channelSecret: env.CHANNEL_SECRET || '',
 };
+const PORT = env.PORT || 3000;
+
 const clientConfig: ClientConfig = config;
 const middlewareConfig: MiddlewareConfig = config;
 const client = new Client(clientConfig);
 
 const app: Application = express();
-
-app.get('/', async (_: Request, res: Response): Promise<void> => {
-  res.status(200).send({
-    message: 'success',
-  });
-});
 
 // メッセージ受信時の処理
 const textEventHandler = async (
@@ -40,16 +35,17 @@ const textEventHandler = async (
   if (event.type !== 'message' || event.message.type !== 'text') {
     return;
   }
-
-
   const { replyToken } = event;
   const { text } = event.message;
+  // DBにユーザ名とステータス情報を送る
+  await createUser(text, 'wait');
   const response: TextMessage = {
     type: 'text',
-    text: "お名前の登録が完了しました！！\n" + text + "様\n上記のお名前でお呼びします。",
+    text: '名前の登録が完了いたしました。\n順番になったらお知らせします。',
   };
   await client.replyMessage(replyToken, response);
 };
+
 
 app.post(
   '/webhook',
@@ -72,6 +68,14 @@ app.post(
   }
 );
 
+app.use(express.json());
+
+app.get("/users", async (_req, res) => {
+  const users = await getUsers();
+  res.json(users);
+});
+
+
 app.listen(PORT, () => {
-  console.log(`http://localhost:${PORT}/`);
+  console.log(`http://localhost:${PORT}/users`);
 });
