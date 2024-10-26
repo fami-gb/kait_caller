@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import { load } from 'ts-dotenv';
 import { getUsers, createUser } from './userService';
+import sqlite from 'sqlite3';
 import {
   ClientConfig,
   Client,
@@ -37,8 +38,9 @@ const textEventHandler = async (
   }
   const { replyToken } = event;
   const { text } = event.message;
+  const LineUserId = event.source.userId || "";
   // DBにユーザ名とステータス情報を送る
-  await createUser(text, 'wait');
+  await createUser(text, 'wait', LineUserId);
   const response: TextMessage = {
     type: 'text',
     text: '名前の登録が完了いたしました。\n順番になったらお知らせします。',
