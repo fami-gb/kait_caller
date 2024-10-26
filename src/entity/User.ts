@@ -10,4 +10,7 @@ export class User {
 
   @Column()
   status!: string; // wait, finishをもつ
+
+  @Column()
+  LineUserId!: string;
 }
